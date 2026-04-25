@@ -1,0 +1,3 @@
+# Nothing local to ignore yet, but reserve the file
+*.tmp
+*.log
