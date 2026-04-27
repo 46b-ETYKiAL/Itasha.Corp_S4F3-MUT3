@@ -1,6 +1,31 @@
-# S4F3-MUT3
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/header.svg" />
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/header.svg" />
+    <img src=".github/assets/header.svg" alt="S4F3-MUT3 header — CRT scanline banner with muted speaker motif and the boot sequence that silences Tailscale telemetry" width="100%" />
+  </picture>
+</p>
 
-> Mutes phone-home traffic from the Tailscale Windows client. The wire stays quiet.
+<p align="center">
+  <b>Mutes phone-home traffic from the Tailscale Windows client. The wire stays quiet.</b>
+</p>
+
+<p align="center">
+  <a href="#what-it-does">Overview</a> &nbsp;&middot;&nbsp;
+  <a href="#what-gets-blocked-where">Layers</a> &nbsp;&middot;&nbsp;
+  <a href="#install">Install</a> &nbsp;&middot;&nbsp;
+  <a href="#daily-use">Daily use</a> &nbsp;&middot;&nbsp;
+  <a href="#verify-its-working">Verify</a> &nbsp;&middot;&nbsp;
+  <a href="#uninstall">Uninstall</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows_10%2F11-ff8c00?style=flat-square&logo=windows&logoColor=0a0a0f" alt="Windows 10/11" />
+  <img src="https://img.shields.io/badge/PowerShell_5.1%2B-01fe36?style=flat-square&logo=powershell&logoColor=0a0a0f" alt="PowerShell 5.1+" />
+  <img src="https://img.shields.io/badge/Tailscale-9a9aaa?style=flat-square&logo=tailscale&logoColor=0a0a0f" alt="Tailscale" />
+  <img src="https://img.shields.io/badge/AdGuard_Home-00e5ff?style=flat-square&logo=adguard&logoColor=0a0a0f" alt="AdGuard Home" />
+  <img src="https://img.shields.io/badge/MIT-0a0a0f?style=flat-square&logoColor=ff8c00" alt="MIT licensed" />
+</p>
 
 ## About
 
@@ -179,4 +204,18 @@ MIT. Do whatever you want.
 
 ---
 
+## Keywords
+
+Tailscale telemetry blocker · Tailscale phone-home blocker · disable Tailscale logs Windows · `TS_NO_LOGS_NO_SUPPORT` · NonFreeNet F-Droid Tailscale · log.tailscale.io block · AdGuard Home tailnet DNS · tailnet-wide DNS sinkhole · WireGuard privacy hardening · Tailscale telemetry mute · Windows AdGuard Home installer · Tailscale Android telemetry block · Tailscale privacy kit Windows.
+
+---
+
 *S4F3-MUT3 is part of the Itasha Corp toolkit.*
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/footer.svg" />
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/footer.svg" />
+    <img src=".github/assets/footer.svg" alt="S4F3-MUT3 footer — CRT fade-out with cancelled sound waves and PRIVATE_NODE label" width="100%" />
+  </picture>
+</p>

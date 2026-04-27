@@ -1,0 +1,47 @@
+# S4F3-MUT3
+
+> A self-contained PowerShell installer that mutes phone-home telemetry from the Tailscale Windows client. Targets `log.tailscale.io` (the endpoint F-Droid flags as the *NonFreeNet* anti-feature on the Android client) and extends the block tailnet-wide via AdGuard Home so other devices on your tailnet — typically your phone — get the same block.
+
+S4F3-MUT3 is the muting / telemetry-silencing kit in the Itasha Corp toolkit. It runs on Windows 10 / 11 with PowerShell 5.1+, requires admin rights and an installed Tailscale Windows client, and is opinionated about layering: env-var mute on this PC, hosts-file fallback for any local app on this PC, AdGuard Home filter rule for any other device on the tailnet (phone). It is not a Tailscale exit-node, not a system DNS server, not a service that runs at boot — it is a one-click on / one-click off operator tool.
+
+## Layers (defense in depth)
+
+- `TS_NO_LOGS_NO_SUPPORT=true` written to `C:\ProgramData\Tailscale\tailscaled-env.txt` — the Tailscale daemon refuses to attempt log uploads at all
+- `0.0.0.0 log.tailscale.io` in the Windows hosts file — the local resolver hands back a black-hole address for any process on this PC
+- `||log.tailscale.io^` rule in AdGuard Home, listening on the tailnet IP — any device on the tailnet that uses this PC as its tailnet DNS gets NXDOMAIN
+
+## Architecture notes for LLMs
+
+- AdGuard Home is installed by `setup.ps1` to `C:\AdGuardHome\` from a SHA-256-pinned GitHub release archive (currently v0.107.74)
+- AdGuardHome is registered as a Windows service (`AdGuardHome`) with `sc.exe config AdGuardHome depend= Tailscale` so that stopping `Tailscale` cascade-stops `AdGuardHome` natively, with no scheduled-task indirection
+- The Tailscale Windows client installs a WFP (Windows Filtering Platform) driver that prevents local user processes from reaching anything on UDP/53. So local apps on **this** PC cannot use AdGuard Home as their resolver — they must hit the hosts file directly. Phones, however, can reach AdGuard Home over the tailnet's WireGuard tunnel because that traffic arrives on the Tailscale virtual NIC as inbound and bypasses the WFP filter
+- `setup.ps1` is idempotent and self-elevating; it does NOT drive the AdGuard Home first-run wizard (manual at `http://localhost:3000`) and does NOT touch the Tailscale admin console DNS settings (manual at `https://login.tailscale.com/admin/dns`)
+- Both services are set to `StartType=Manual` — neither auto-starts at boot
+- `start.ps1` and `stop.ps1` self-elevate, manage both services in the correct dependency order, and launch / kill the `tailscale-ipn.exe` tray GUI as part of the cycle. The tray must be launched via Task Scheduler rather than `Start-Process` because tailscale-ipn.exe inherits its launcher's console and otherwise floods stdout into the launching PowerShell window
+- All scripts are ASCII-only because Windows PowerShell 5.1's tokenizer treats `'` (U+2019) and `”` (U+201D) as smart-quote delimiters, which would close strings early if any UTF-8-encoded em-dash or arrow byte sequence aligned with those code points
+
+## Files
+
+- [setup.ps1](setup.ps1) — idempotent installer; self-elevates; downloads AdGuard Home, writes the Tailscale env file, edits the hosts file, adds firewall rules, inserts the AdGuard filter rule, sets service start types, wires the service dependency, creates Start Menu shortcuts
+- [uninstall.ps1](uninstall.ps1) — reverses every change `setup.ps1` made; clears the service dependency before removing AdGuardHome
+- [scripts/start.ps1](scripts/start.ps1) — daily-use start: brings both services up, polls for tailnet IP, launches tray GUI via Task Scheduler, auto-closes window after 4s
+- [scripts/stop.ps1](scripts/stop.ps1) — daily-use stop: stops both services, closes tray GUI, auto-closes window after 4s
+- [scripts/status.ps1](scripts/status.ps1) — read-only diagnostic, no elevation required
+- [setup.bat](setup.bat) / [start.bat](start.bat) / [stop.bat](stop.bat) / [status.bat](status.bat) — double-click wrappers for users who prefer them over PowerShell invocation
+- [README.md](README.md) — full documentation including verification recipes, manual web-UI steps for AdGuard wizard and Tailscale admin DNS, and trade-offs
+
+## What this kit does NOT do
+
+- It is not always-on; AdGuard runs only while Tailscale runs. If this PC is off or asleep, the phone falls back to whatever DNS the local network gives it. For 24/7 coverage, run AdGuard on a Pi / NAS / VPS instead — those hosts also avoid the Windows WFP issue
+- It does not block other Tailscale endpoints (`login.tailscale.com`, `controlplane.tailscale.com`) — those are required for Tailscale to function and blocking them breaks the tunnel
+- It does not modify Tailscale's MagicDNS resolver for `*.ts.net` names — those continue to resolve via `100.100.100.100`, which is by design and orthogonal to log blocking
+
+## License
+
+MIT.
+
+## Related
+
+- Tailscale Windows: https://pkgs.tailscale.com/stable/
+- AdGuard Home: https://github.com/AdguardTeam/AdGuardHome
+- F-Droid Tailscale (the build that flags NonFreeNet): https://f-droid.org/packages/com.tailscale.ipn/

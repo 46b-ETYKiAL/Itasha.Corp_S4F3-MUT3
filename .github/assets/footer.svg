@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 160" width="1280" height="160">
+  <defs>
+    <style>
+      @keyframes led-pulse {
+        0%, 100% { opacity: 0.9; }
+        50% { opacity: 0.4; }
+      }
+      @keyframes wave-fade {
+        0% { opacity: 0.15; }
+        50% { opacity: 0.05; }
+        100% { opacity: 0.15; }
+      }
+      @keyframes sweep {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(112px); }
+      }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+    <pattern id="scanlines" patternUnits="userSpaceOnUse" width="4" height="4">
+      <rect width="4" height="4" fill="transparent"/>
+      <line x1="0" y1="0" x2="4" y2="0" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.4)"/>
+    </radialGradient>
+    <filter id="phosphor">
+      <feGaussianBlur stdDeviation="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Outer bezel -->
+  <rect x="0" y="0" width="1280" height="160" rx="12" ry="12" fill="#111118" stroke="#2a2833" stroke-width="1.5"/>
+  <!-- Inner bezel -->
+  <rect x="8" y="8" width="1264" height="144" rx="8" ry="8" fill="#18181f"/>
+  <!-- Screen -->
+  <rect x="16" y="16" width="1248" height="120" rx="4" ry="4" fill="#08060d"/>
+  <!-- Scanlines -->
+  <rect x="16" y="16" width="1248" height="120" rx="4" ry="4" fill="url(#scanlines)"/>
+  <!-- Vignette -->
+  <rect x="16" y="16" width="1248" height="120" rx="4" ry="4" fill="url(#vignette)"/>
+
+  <!-- Scanline sweep -->
+  <rect x="16" y="16" width="1248" height="1" fill="#ff8c00" opacity="0.03">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,120" dur="10s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Ambient accent line -->
+  <line x1="16" y1="75" x2="1264" y2="75" stroke="#ff8c00" stroke-width="0.5" opacity="0.03"/>
+
+  <!-- Tagline -->
+  <text x="640" y="58" text-anchor="middle" font-family="'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',Consolas,monospace" font-size="14" fill="#ff8c00" opacity="0.7">the wire stays quiet.</text>
+
+  <!-- Status line -->
+  <text x="640" y="82" text-anchor="middle" font-family="'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',Consolas,monospace" font-size="12" fill="#b0aec0">telemetry: muted across the tailnet</text>
+
+  <!-- Node type -->
+  <text x="640" y="106" text-anchor="middle" font-family="'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',Consolas,monospace" font-size="10" fill="#a09eb0">PRIVATE_NODE</text>
+
+  <!-- Decorative cancelled wave - left -->
+  <g transform="translate(80, 65)" opacity="0.25">
+    <path d="M 0 8 Q 8 -4 16 8" fill="none" stroke="#ff8c00" stroke-width="1.5"/>
+    <path d="M 0 8 Q 12 -10 24 8" fill="none" stroke="#ff8c00" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 0 8 Q 16 -16 32 8" fill="none" stroke="#ff8c00" stroke-width="1.5" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.05;0.4" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <line x1="-4" y1="14" x2="36" y2="-10" stroke="#ff3030" stroke-width="2" opacity="0.7"/>
+  </g>
+
+  <!-- Decorative cancelled wave - right -->
+  <g transform="translate(1170, 65)" opacity="0.25">
+    <path d="M 32 8 Q 24 -4 16 8" fill="none" stroke="#ff8c00" stroke-width="1.5"/>
+    <path d="M 32 8 Q 20 -10 8 8" fill="none" stroke="#ff8c00" stroke-width="1.5" opacity="0.6"/>
+    <path d="M 32 8 Q 16 -16 0 8" fill="none" stroke="#ff8c00" stroke-width="1.5" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.05;0.4" dur="3s" repeatCount="indefinite"/>
+    </path>
+    <line x1="36" y1="14" x2="-4" y2="-10" stroke="#ff3030" stroke-width="2" opacity="0.7"/>
+  </g>
+
+  <!-- Accent lines -->
+  <line x1="160" y1="80" x2="420" y2="80" stroke="#ff8c00" stroke-width="1" opacity="0.1">
+    <animate attributeName="opacity" values="0.1;0.2;0.1" dur="3s" repeatCount="indefinite"/>
+  </line>
+  <line x1="860" y1="80" x2="1120" y2="80" stroke="#ff8c00" stroke-width="1" opacity="0.1">
+    <animate attributeName="opacity" values="0.1;0.2;0.1" dur="3s" repeatCount="indefinite"/>
+  </line>
+
+  <!-- Power LED -->
+  <circle cx="1240" cy="148" r="6" fill="#01fe36" opacity="0.3"/>
+  <circle cx="1240" cy="148" r="4" fill="#01fe36" opacity="1.0"/>
+
+  <!-- Bezel labels -->
+  <text x="30" y="153" font-family="'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',Consolas,monospace" font-size="8" fill="#4a4859">ITASHA.CORP</text>
+  <text x="1220" y="153" text-anchor="end" font-family="'SF Mono','Fira Code','Cascadia Code','JetBrains Mono',Consolas,monospace" font-size="8" fill="#4a4859">CRT-S4F3</text>
+</svg>

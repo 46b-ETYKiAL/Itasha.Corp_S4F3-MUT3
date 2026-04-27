@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ff8c00" stroke-width="0.5" opacity="0.25"/>
+    </pattern>
+    <pattern id="scanlines" patternUnits="userSpaceOnUse" width="1280" height="4">
+      <rect width="1280" height="2" fill="white" opacity="0.06"/>
+    </pattern>
+    <filter id="accent-glow">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.3)"/>
+    </radialGradient>
+  </defs>
+  <style>
+    @keyframes glow-pulse { 0%,100% { opacity: 0.9; } 50% { opacity: 1; } }
+    @keyframes bar-glow { 0%,100% { opacity: 0.15; } 50% { opacity: 0.3; } }
+    @keyframes wave-cancel { 0%,100% { opacity: 0.55; } 50% { opacity: 0.08; } }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  </style>
+  <rect width="1280" height="640" fill="#0e0c15"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <rect width="1280" height="640" fill="url(#scanlines)"/>
+  <rect width="1280" height="640" fill="url(#vignette)"/>
+
+  <!-- Circuit trace background -->
+  <path d="M 900,100 L 900,200 L 1050,200 L 1050,340 L 1150,340" stroke="#ff8c00" stroke-width="0.5" fill="none" opacity="0.04"/>
+  <path d="M 200,500 L 200,400 L 350,400 L 350,300" stroke="#ff8c00" stroke-width="0.5" fill="none" opacity="0.04"/>
+
+  <!-- Corner brackets -->
+  <path d="M 40,40 L 40,80 M 40,40 L 80,40" stroke="#ff8c00" stroke-width="2" fill="none" opacity="0.25"/>
+  <path d="M 1240,40 L 1240,80 M 1240,40 L 1200,40" stroke="#ff8c00" stroke-width="2" fill="none" opacity="0.25"/>
+  <path d="M 40,600 L 40,560 M 40,600 L 80,600" stroke="#ff8c00" stroke-width="2" fill="none" opacity="0.25"/>
+  <path d="M 1240,600 L 1240,560 M 1240,600 L 1200,600" stroke="#ff8c00" stroke-width="2" fill="none" opacity="0.25"/>
+
+  <!-- ITASHA.CORP wordmark -->
+  <text x="640" y="160" text-anchor="middle" font-family="'Courier New',monospace" font-size="14" fill="#7a7a8a" letter-spacing="6">ITASHA.CORP</text>
+  <!-- Repo name with glow pulse -->
+  <text x="640" y="280" text-anchor="middle" font-family="'Courier New',monospace" font-size="36" font-weight="bold" fill="#ff8c00" style="animation: glow-pulse 4s ease-in-out infinite;">[ S4F3-MUT3 ]</text>
+  <!-- Description -->
+  <text x="640" y="330" text-anchor="middle" font-family="'Courier New',monospace" font-size="17" fill="#9a9aaa">Mutes Tailscale telemetry on Windows</text>
+  <!-- Divider -->
+  <line x1="440" y1="345" x2="840" y2="345" stroke="#ff8c00" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- Graphic - muted speaker with cancelled waves, scaled up 1.4x -->
+  <g transform="translate(640, 460) scale(1.4) translate(-640, -460)">
+    <!-- Speaker body -->
+    <rect x="595" y="438" width="20" height="44" fill="none" stroke="#ff8c00" stroke-width="2" opacity="0.85"/>
+    <!-- Speaker cone -->
+    <path d="M 615,438 L 651,418 L 651,502 L 615,482 Z" fill="none" stroke="#ff8c00" stroke-width="2" opacity="0.85"/>
+    <!-- Speaker cone glow -->
+    <path d="M 615,438 L 651,418 L 651,502 L 615,482 Z" fill="#ff8c00" opacity="0.06" filter="url(#accent-glow)"/>
+    <!-- Sound waves cancelled -->
+    <path d="M 665 438 Q 685 460 665 482" fill="none" stroke="#ff8c00" stroke-width="2" opacity="0.55" style="animation: wave-cancel 3s ease-in-out infinite;"/>
+    <path d="M 678 425 Q 706 460 678 495" fill="none" stroke="#ff8c00" stroke-width="1.5" opacity="0.4" style="animation: wave-cancel 3s ease-in-out 0.4s infinite;"/>
+    <path d="M 690 412 Q 726 460 690 508" fill="none" stroke="#ff8c00" stroke-width="1.2" opacity="0.25" style="animation: wave-cancel 3s ease-in-out 0.8s infinite;"/>
+    <!-- Mute slash -->
+    <line x1="585" y1="510" x2="740" y2="408" stroke="#ff3030" stroke-width="3.5" opacity="0.85"/>
+    <line x1="585" y1="510" x2="740" y2="408" stroke="#ff8c00" stroke-width="1.2" opacity="0.55"/>
+  </g>
+
+  <!-- Stat labels -->
+  <text x="640" y="555" text-anchor="middle" font-family="'Courier New',monospace" font-size="10" fill="#5a5869">PowerShell  |  AdGuardHome  |  Tailscale  |  Windows 10/11</text>
+  <!-- Node type -->
+  <text x="640" y="575" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#7a7a8a" letter-spacing="4">PRIVATE NODE</text>
+  <!-- Built by -->
+  <text x="640" y="595" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#7a7889">Built by Itasha Corp</text>
+  <!-- Accent bar bottom -->
+  <rect y="632" width="1280" height="8" fill="#ff8c00"/>
+  <!-- Accent bar glow -->
+  <rect y="632" width="1280" height="4" fill="#ff8c00" style="animation: bar-glow 4s ease-in-out infinite;" filter="url(#accent-glow)"/>
+</svg>
