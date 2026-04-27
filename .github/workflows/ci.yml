@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Parse under Windows PowerShell 5.1 specifically. The historical
       # smart-quote tokenizer bug (em-dash / arrow inside quoted strings
