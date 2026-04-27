@@ -22,12 +22,12 @@ S4F3-MUT3 is the muting / telemetry-silencing kit in the Itasha Corp toolkit. It
 
 ## Files
 
-- [setup.ps1](setup.ps1) — idempotent installer; self-elevates; downloads AdGuard Home, writes the Tailscale env file, edits the hosts file, adds firewall rules, inserts the AdGuard filter rule, sets service start types, wires the service dependency, creates Start Menu shortcuts
-- [uninstall.ps1](uninstall.ps1) — reverses every change `setup.ps1` made; clears the service dependency before removing AdGuardHome
+- [scripts/setup.ps1](scripts/setup.ps1) — idempotent installer; self-elevates; downloads AdGuard Home, writes the Tailscale env file, edits the hosts file, adds firewall rules, inserts the AdGuard filter rule, sets service start types, wires the service dependency, creates Start Menu shortcuts
+- [scripts/uninstall.ps1](scripts/uninstall.ps1) — reverses every change `setup.ps1` made; clears the service dependency before removing AdGuardHome
 - [scripts/start.ps1](scripts/start.ps1) — daily-use start: brings both services up, polls for tailnet IP, launches tray GUI via Task Scheduler, auto-closes window after 4s
 - [scripts/stop.ps1](scripts/stop.ps1) — daily-use stop: stops both services, closes tray GUI, auto-closes window after 4s
 - [scripts/status.ps1](scripts/status.ps1) — read-only diagnostic, no elevation required
-- [setup.bat](setup.bat) / [start.bat](start.bat) / [stop.bat](stop.bat) / [status.bat](status.bat) — double-click wrappers for users who prefer them over PowerShell invocation
+- [setup.bat](setup.bat) / [start.bat](start.bat) / [stop.bat](stop.bat) / [status.bat](status.bat) / [uninstall.bat](uninstall.bat) — double-click wrappers for users who prefer them over PowerShell invocation
 - [README.md](README.md) — full documentation including verification recipes, manual web-UI steps for AdGuard wizard and Tailscale admin DNS, and trade-offs
 
 ## What this kit does NOT do

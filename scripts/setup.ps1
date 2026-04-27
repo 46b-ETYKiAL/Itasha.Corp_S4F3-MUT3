@@ -229,10 +229,13 @@ if ($invokingUser -and ($invokingUser -split '\\')[1]) {
 }
 New-Item -ItemType Directory -Path $shortcutDir -Force | Out-Null
 
-$startScript = Join-Path $PSScriptRoot 'scripts\start.ps1'
-$stopScript  = Join-Path $PSScriptRoot 'scripts\stop.ps1'
+$startScript = Join-Path $PSScriptRoot 'start.ps1'
+$stopScript  = Join-Path $PSScriptRoot 'stop.ps1'
 if (-not (Test-Path $startScript)) { throw "missing $startScript" }
 if (-not (Test-Path $stopScript))  { throw "missing $stopScript" }
+
+# Repo root is one level up from this scripts/ folder (since setup.ps1 lives in scripts/)
+$repoRoot = Split-Path $PSScriptRoot -Parent
 
 $shell = New-Object -ComObject WScript.Shell
 
@@ -241,7 +244,7 @@ $start.TargetPath  = 'powershell.exe'
 $start.Arguments   = "-NoProfile -ExecutionPolicy Bypass -File `"$startScript`""
 $start.IconLocation = "$aghExe,0"
 $start.Description = 'Starts Tailscale and AdGuardHome. Self-elevates via UAC.'
-$start.WorkingDirectory = $PSScriptRoot
+$start.WorkingDirectory = $repoRoot
 $start.WindowStyle = 1
 $start.Save()
 
@@ -250,7 +253,7 @@ $stop.TargetPath  = 'powershell.exe'
 $stop.Arguments   = "-NoProfile -ExecutionPolicy Bypass -File `"$stopScript`""
 $stop.IconLocation = "$aghExe,0"
 $stop.Description = 'Stops AdGuardHome and Tailscale. Self-elevates via UAC.'
-$stop.WorkingDirectory = $PSScriptRoot
+$stop.WorkingDirectory = $repoRoot
 $stop.WindowStyle = 1
 $stop.Save()
 OK "shortcuts created in $shortcutDir"

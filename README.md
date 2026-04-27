@@ -86,7 +86,7 @@ git clone https://github.com/46b-ETYKiAL/Itasha.Corp_S4F3-MUT3.git
 cd Itasha.Corp_S4F3-MUT3
 
 # Run setup (will self-elevate via UAC)
-.\setup.ps1
+.\setup.bat        # or: powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
 Two manual web-UI steps remain after the script finishes — the script can't drive these for you:
@@ -162,7 +162,7 @@ Three options, easiest first:
 ## Uninstall
 
 ```powershell
-.\uninstall.ps1
+.\uninstall.bat    # or: powershell -ExecutionPolicy Bypass -File scripts\uninstall.ps1
 ```
 
 Reverts every change `setup.ps1` made (services, scheduled tasks, firewall rules, hosts file, Start Menu shortcuts, AdGuard install dir, Tailscale env file). One manual step remains in the Tailscale admin console (remove the custom nameserver, turn off Override DNS).
@@ -173,18 +173,18 @@ Reverts every change `setup.ps1` made (services, scheduled tasks, firewall rules
 
 | File | Purpose |
 |---|---|
-| `setup.ps1` | Idempotent installer — safe to re-run |
-| `uninstall.ps1` | Reverses setup.ps1 |
+| `scripts/setup.ps1` | Idempotent installer — safe to re-run |
+| `scripts/uninstall.ps1` | Reverses `setup.ps1` |
 | `scripts/start.ps1` | Self-elevating: starts Tailscale + AdGuardHome with verification |
 | `scripts/stop.ps1` | Self-elevating: stops both services in reverse dependency order |
 | `scripts/status.ps1` | Read-only diagnostic — services, dependency, files, hosts, firewall, web UI |
-| `setup.bat` / `start.bat` / `stop.bat` / `status.bat` | Double-click wrappers for the corresponding `.ps1` (handy because Windows opens `.ps1` in Notepad on double-click by default) |
+| `setup.bat` / `start.bat` / `stop.bat` / `status.bat` / `uninstall.bat` | Double-click wrappers for the corresponding `.ps1` (handy because Windows opens `.ps1` in Notepad on double-click by default) |
 | `README.md` | This file |
 
 ### Three ways to invoke
 
-1. **Start Menu** (created by `setup.ps1`): Press Win, type "Tailscale", click *Start Tailscale + AdGuard* / *Stop Tailscale + AdGuard*.
-2. **Double-click a `.bat`** at the repo root: `setup.bat`, `start.bat`, `stop.bat`, `status.bat`. The `.bat` calls the matching `.ps1`; setup/start/stop self-elevate via UAC; `status.bat` runs read-only and pauses so you can read the output.
+1. **Start Menu** (created by `scripts/setup.ps1`): Press Win, type "Tailscale", click *Start Tailscale + AdGuard* / *Stop Tailscale + AdGuard*.
+2. **Double-click a `.bat`** at the repo root: `setup.bat`, `start.bat`, `stop.bat`, `status.bat`, `uninstall.bat`. The `.bat` calls the matching `.ps1` under `scripts/`; setup/start/stop/uninstall self-elevate via UAC; `status.bat` runs read-only and pauses so you can read the output.
 3. **Direct PowerShell**: `powershell -ExecutionPolicy Bypass -File <repo>\scripts\start.ps1` — useful when you want to pipe `-NoPause` for scripting.
 
 ---

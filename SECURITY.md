@@ -42,7 +42,7 @@ If you discover a security vulnerability in S4F3-MUT3, please report it responsi
 
 This policy covers:
 
-- The PowerShell installer (`setup.ps1`), uninstaller (`uninstall.ps1`), and lifecycle scripts (`scripts/start.ps1`, `scripts/stop.ps1`, `scripts/status.ps1`)
+- The PowerShell installer (`scripts/setup.ps1`), uninstaller (`scripts/uninstall.ps1`), and lifecycle scripts (`scripts/start.ps1`, `scripts/stop.ps1`, `scripts/status.ps1`)
 - The `.bat` wrappers and the Start Menu shortcut targets
 - The pinned AdGuard Home download URL and SHA-256 verification step
 - The Windows service-dependency wiring between `AdGuardHome` and `Tailscale`
