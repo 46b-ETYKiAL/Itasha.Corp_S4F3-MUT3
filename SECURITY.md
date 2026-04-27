@@ -9,7 +9,7 @@ last_updated: 2026-04-27
 
 | Version | Supported |
 |---------|-----------|
-| main    | Yes       |
+| master  | Yes       |
 
 ## Reporting a Vulnerability
 
@@ -26,7 +26,7 @@ If you discover a security vulnerability in S4F3-MUT3, please report it responsi
 
 - Description of the vulnerability
 - Steps to reproduce on a clean Windows 10 / 11 machine
-- Affected commit SHA (or `main` if testing the tip)
+- Affected commit SHA (or `master` if testing the tip)
 - Potential impact assessment
 - Suggested fix (if any)
 
