@@ -14,8 +14,8 @@ A self-contained PowerShell kit that:
 
 1. **Stops your Tailscale Windows client from uploading debug logs** to `log.tailscale.io` (the behavior F-Droid flags as the *NonFreeNet* anti-feature on the Android client).
 2. **Installs AdGuard Home as a local DNS sinkhole** so any other devices on your tailnet (typically: your phone) get the same block via tailnet-wide DNS.
-3. **Wires lifecycle**: AdGuard Home auto-starts when Tailscale starts, auto-stops when Tailscale stops. Neither service auto-starts at boot.
-4. **Adds Start Menu shortcuts** so you can start/stop the whole stack with one click.
+3. **Wires lifecycle via a Windows service dependency**: AdGuardHome lists Tailscale as a required service, so Windows cascade-stops AdGuardHome whenever Tailscale stops, and `Start-Service AdGuardHome` auto-starts Tailscale first. Neither service auto-starts at boot.
+4. **Adds Start Menu shortcuts** that point at `scripts/start.ps1` and `scripts/stop.ps1` — both self-elevate via UAC and explicitly transition both services with verification output.
 
 The end state is **defense in depth**: even if one layer fails, the others still block telemetry uploads.
 
@@ -98,9 +98,10 @@ Both services are set to **Manual** start. Nothing runs at boot.
 | Action | How |
 |---|---|
 | Start everything | Press Win, type "Tailscale", click **Start Tailscale + AdGuard** |
-| Stop everything | Win → "Tailscale" → **Stop Tailscale + AdGuard** |
+| Stop everything | Win, type "Tailscale", click **Stop Tailscale + AdGuard** |
+| Status check | Run `powershell -ExecutionPolicy Bypass -File scripts\status.ps1` in the repo dir (no admin required for most checks) |
 
-Single UAC prompt per click. AdGuard mirrors Tailscale's state via two scheduled tasks that listen for Service Control Manager event 7036.
+Single UAC prompt per click. The Start shortcut runs `scripts\start.ps1` which self-elevates and brings up Tailscale then AdGuardHome explicitly. The Stop shortcut runs `scripts\stop.ps1` which stops AdGuardHome then Tailscale. Even if a script fails partway through, the service dependency wired by `setup.ps1` (`sc.exe config AdGuardHome depend= Tailscale`) guarantees that stopping Tailscale by any means cascades a clean stop to AdGuardHome.
 
 > The **Tailscale tray's "Exit"** option only closes the UI — the service keeps running. To actually stop the service (and cascade-stop AdGuard), use the Stop shortcut, or `net stop Tailscale` in an elevated shell.
 
@@ -149,7 +150,17 @@ Reverts every change `setup.ps1` made (services, scheduled tasks, firewall rules
 |---|---|
 | `setup.ps1` | Idempotent installer — safe to re-run |
 | `uninstall.ps1` | Reverses setup.ps1 |
+| `scripts/start.ps1` | Self-elevating: starts Tailscale + AdGuardHome with verification |
+| `scripts/stop.ps1` | Self-elevating: stops both services in reverse dependency order |
+| `scripts/status.ps1` | Read-only diagnostic — services, dependency, files, hosts, firewall, web UI |
+| `setup.bat` / `start.bat` / `stop.bat` / `status.bat` | Double-click wrappers for the corresponding `.ps1` (handy because Windows opens `.ps1` in Notepad on double-click by default) |
 | `README.md` | This file |
+
+### Three ways to invoke
+
+1. **Start Menu** (created by `setup.ps1`): Press Win, type "Tailscale", click *Start Tailscale + AdGuard* / *Stop Tailscale + AdGuard*.
+2. **Double-click a `.bat`** at the repo root: `setup.bat`, `start.bat`, `stop.bat`, `status.bat`. The `.bat` calls the matching `.ps1`; setup/start/stop self-elevate via UAC; `status.bat` runs read-only and pauses so you can read the output.
+3. **Direct PowerShell**: `powershell -ExecutionPolicy Bypass -File <repo>\scripts\start.ps1` — useful when you want to pipe `-NoPause` for scripting.
 
 ---
 

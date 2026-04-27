@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    S4F3-MUT3 — mutes log.tailscale.io telemetry on Windows via TS_NO_LOGS_NO_SUPPORT,
+    S4F3-MUT3 - mutes log.tailscale.io telemetry on Windows via TS_NO_LOGS_NO_SUPPORT,
     hosts file, and AdGuard Home for tailnet-wide enforcement (Android too).
 .DESCRIPTION
-    Idempotent — safe to re-run. Self-elevates if not already admin.
+    Idempotent - safe to re-run. Self-elevates if not already admin.
 
     What it does:
       1. Installs AdGuard Home v0.107.74 to C:\AdGuardHome (if missing)
@@ -13,8 +13,9 @@
       5. Inserts ||log.tailscale.io^ into AdGuardHome.yaml user_rules
       6. Sets AdGuardHome and Tailscale services to Manual start
       7. Runs `tailscale set --accept-dns=false` (works around Windows WFP DNS interception)
-      8. Creates two scheduled tasks that mirror AdGuard to Tailscale's service state
-      9. Creates Start Menu shortcuts under "Tailscale + AdGuard"
+      8. Configures AdGuardHome to depend on Tailscale (cascade-stop wired natively)
+      9. Removes any legacy event-trigger scheduled tasks from older installs
+     10. Creates Start Menu shortcuts under "Tailscale + AdGuard" pointing at scripts/start.ps1 / scripts/stop.ps1
 
     What it does NOT do (web UI only):
       - Tailscale admin console DNS: add this machine's tailnet IPv4 as nameserver,
@@ -24,7 +25,9 @@
     See README.md for full context.
 #>
 [CmdletBinding()]
-param()
+param(
+    [switch]$NoPause
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -32,9 +35,9 @@ $ErrorActionPreference = 'Stop'
 $current = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not $current.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host 'Re-launching elevated...' -ForegroundColor Yellow
-    Start-Process powershell -Verb RunAs -ArgumentList @(
-        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`""
-    ) -Wait
+    $relaunchArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"")
+    if ($NoPause) { $relaunchArgs += '-NoPause' }
+    Start-Process powershell -Verb RunAs -ArgumentList $relaunchArgs -Wait
     exit
 }
 
@@ -158,17 +161,17 @@ if (Test-Path $cfgPath) {
         OK 'rule inserted, service restarted'
     }
 } else {
-    Warn 'AdGuardHome.yaml not found yet — complete first-run setup at http://localhost:3000 then re-run this script'
+    Warn 'AdGuardHome.yaml not found yet - complete first-run setup at http://localhost:3000 then re-run this script'
 }
 
-# === 6. Service start types → Manual ===
-Step 'Service start types → Manual'
+# === 6. Service start types -> Manual ===
+Step 'Service start types -> Manual'
 foreach ($s in @('AdGuardHome', 'Tailscale')) {
     $svc = Get-Service -Name $s -ErrorAction SilentlyContinue
     if (-not $svc) { Warn "$s service not found"; continue }
     if ($svc.StartType -ne 'Manual') {
         sc.exe config $s start= demand | Out-Null
-        OK "$s → Manual"
+        OK "$s -> Manual"
     } else {
         Skip "$s already Manual"
     }
@@ -184,41 +187,35 @@ if (Test-Path $tsExe) {
     Warn 'tailscale.exe not found at standard path'
 }
 
-# === 8. Scheduled tasks ===
-Step 'Scheduled tasks (mirror AdGuard to Tailscale state)'
-function New-EventTrigger {
-    param([string]$Subscription)
-    $class = Get-CimClass -ClassName MSFT_TaskEventTrigger -Namespace Root/Microsoft/Windows/TaskScheduler
-    $t = New-CimInstance -CimClass $class -ClientOnly
-    $t.Enabled = $true
-    $t.Subscription = $Subscription
-    return $t
+# === 8. Service dependency (replaces fragile event-trigger tasks) ===
+Step 'AdGuardHome service dependency on Tailscale'
+# Native Windows cascade-stop: when Tailscale stops, Windows auto-stops AdGuardHome
+# because it lists Tailscale in its required-service list. Also lets
+# Start-Service AdGuardHome auto-start Tailscale if it is not already running.
+$aghDeps = @((Get-Service AdGuardHome -ErrorAction SilentlyContinue).RequiredServices | Select-Object -ExpandProperty Name)
+if ($aghDeps -contains 'Tailscale') {
+    Skip 'AdGuardHome already depends on Tailscale'
+} else {
+    sc.exe config AdGuardHome depend= Tailscale | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        OK 'AdGuardHome depend= Tailscale set'
+    } else {
+        Warn "sc.exe config AdGuardHome depend= Tailscale exited $LASTEXITCODE"
+    }
 }
-$subRunning = "<QueryList><Query Id='0' Path='System'><Select Path='System'>*[System[Provider[@Name='Service Control Manager'] and (EventID=7036)]] and *[EventData[Data[@Name='param1']='Tailscale' and Data[@Name='param2']='running']]</Select></Query></QueryList>"
-$subStopped = "<QueryList><Query Id='0' Path='System'><Select Path='System'>*[System[Provider[@Name='Service Control Manager'] and (EventID=7036)]] and *[EventData[Data[@Name='param1']='Tailscale' and Data[@Name='param2']='stopped']]</Select></Query></QueryList>"
-$principal  = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -RunLevel Highest -LogonType ServiceAccount
-$settings   = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
 
-Unregister-ScheduledTask -TaskName 'AdGuardHome on Tailscale start' -Confirm:$false -ErrorAction SilentlyContinue
-Unregister-ScheduledTask -TaskName 'AdGuardHome off on Tailscale stop' -Confirm:$false -ErrorAction SilentlyContinue
+# === 9. Remove legacy event-trigger scheduled tasks (from older setup.ps1) ===
+Step 'Removing any legacy scheduled tasks'
+foreach ($legacy in @('AdGuardHome on Tailscale start', 'AdGuardHome off on Tailscale stop')) {
+    if (Get-ScheduledTask -TaskName $legacy -ErrorAction SilentlyContinue) {
+        Unregister-ScheduledTask -TaskName $legacy -Confirm:$false
+        OK "removed legacy task '$legacy'"
+    } else {
+        Skip "no legacy task '$legacy'"
+    }
+}
 
-Register-ScheduledTask `
-    -TaskName 'AdGuardHome on Tailscale start' `
-    -Description 'Auto-starts AdGuardHome when the Tailscale service enters running state.' `
-    -Trigger (New-EventTrigger -Subscription $subRunning) `
-    -Action (New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -Command "Start-Service AdGuardHome"') `
-    -Principal $principal -Settings $settings | Out-Null
-OK "task 'AdGuardHome on Tailscale start' registered"
-
-Register-ScheduledTask `
-    -TaskName 'AdGuardHome off on Tailscale stop' `
-    -Description 'Auto-stops AdGuardHome when the Tailscale service enters stopped state.' `
-    -Trigger (New-EventTrigger -Subscription $subStopped) `
-    -Action (New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -Command "Stop-Service AdGuardHome -Force"') `
-    -Principal $principal -Settings $settings | Out-Null
-OK "task 'AdGuardHome off on Tailscale stop' registered"
-
-# === 9. Start Menu shortcuts (per-user) ===
+# === 10. Start Menu shortcuts (per-user) ===
 Step 'Start Menu shortcuts'
 $shortcutDir = Join-Path ([Environment]::GetFolderPath('Programs')) 'Tailscale + AdGuard'
 # Programs folder above is the elevated SYSTEM user's. We want the invoking user's.
@@ -232,28 +229,36 @@ if ($invokingUser -and ($invokingUser -split '\\')[1]) {
 }
 New-Item -ItemType Directory -Path $shortcutDir -Force | Out-Null
 
+$startScript = Join-Path $PSScriptRoot 'scripts\start.ps1'
+$stopScript  = Join-Path $PSScriptRoot 'scripts\stop.ps1'
+if (-not (Test-Path $startScript)) { throw "missing $startScript" }
+if (-not (Test-Path $stopScript))  { throw "missing $stopScript" }
+
 $shell = New-Object -ComObject WScript.Shell
 
 $start = $shell.CreateShortcut((Join-Path $shortcutDir 'Start Tailscale + AdGuard.lnk'))
 $start.TargetPath  = 'powershell.exe'
-$start.Arguments   = '-NoProfile -WindowStyle Hidden -Command "Start-Process cmd.exe -Verb RunAs -ArgumentList ''/c'',''net start Tailscale'' -Wait"'
+$start.Arguments   = "-NoProfile -ExecutionPolicy Bypass -File `"$startScript`""
 $start.IconLocation = "$aghExe,0"
-$start.Description = 'Starts the Tailscale service. AdGuard Home auto-follows via scheduled task.'
-$start.WindowStyle = 7
+$start.Description = 'Starts Tailscale and AdGuardHome. Self-elevates via UAC.'
+$start.WorkingDirectory = $PSScriptRoot
+$start.WindowStyle = 1
 $start.Save()
 
 $stop = $shell.CreateShortcut((Join-Path $shortcutDir 'Stop Tailscale + AdGuard.lnk'))
 $stop.TargetPath  = 'powershell.exe'
-$stop.Arguments   = '-NoProfile -WindowStyle Hidden -Command "Start-Process cmd.exe -Verb RunAs -ArgumentList ''/c'',''net stop Tailscale'' -Wait"'
+$stop.Arguments   = "-NoProfile -ExecutionPolicy Bypass -File `"$stopScript`""
 $stop.IconLocation = "$aghExe,0"
-$stop.Description = 'Stops the Tailscale service. AdGuard Home auto-follows via scheduled task.'
-$stop.WindowStyle = 7
+$stop.Description = 'Stops AdGuardHome and Tailscale. Self-elevates via UAC.'
+$stop.WorkingDirectory = $PSScriptRoot
+$stop.WindowStyle = 1
 $stop.Save()
 OK "shortcuts created in $shortcutDir"
+OK "shortcuts target: $startScript / $stopScript"
 
 # === Done ===
 Write-Host "`n=== Setup complete ===" -ForegroundColor Green
-Write-Host "Press Win key, type 'Tailscale' — both shortcuts should appear."
+Write-Host "Press Win key, type 'Tailscale' - both shortcuts should appear."
 Write-Host ''
 
 # Detect this machine's tailnet IP for the user-facing instructions
@@ -261,14 +266,16 @@ $tailnetIp = $null
 if (Test-Path $tsExe) {
     $tailnetIp = (& $tsExe ip -4 2>$null | Select-Object -First 1).Trim()
 }
-if (-not $tailnetIp) { $tailnetIp = '<this machine''s tailnet IP — run `tailscale ip -4`>' }
+if (-not $tailnetIp) { $tailnetIp = '<this machine''s tailnet IP - run `tailscale ip -4`>' }
 
-Write-Host 'Web-UI steps (only YOU can do these — see README.md):'
+Write-Host 'Web-UI steps (only YOU can do these - see README.md):'
 Write-Host '  1. AdGuard Home wizard at http://localhost:3000 (first-run only)'
 Write-Host '  2. Tailscale admin console: https://login.tailscale.com/admin/dns'
 Write-Host "     - Add nameserver $tailnetIp (Custom)"
 Write-Host '     - Toggle Override DNS servers ON'
 Write-Host '     - Toggle MagicDNS ON'
 Write-Host ''
-Write-Host 'Press any key to exit...'
-[Console]::ReadKey() | Out-Null
+if (-not $NoPause) {
+    Write-Host 'Press any key to exit...'
+    try { [Console]::ReadKey($true) | Out-Null } catch { Read-Host | Out-Null }
+}

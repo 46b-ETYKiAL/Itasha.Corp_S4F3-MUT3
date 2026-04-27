@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    S4F3-MUT3 uninstaller — reverses everything setup.ps1 created.
+    S4F3-MUT3 uninstaller - reverses everything setup.ps1 created.
 .DESCRIPTION
     Self-elevates if not already admin. Idempotent.
 
@@ -14,8 +14,8 @@
 
     Restores:
       - AdGuardHome service: removed entirely
-      - Tailscale service: StartType → Automatic
-      - Tailscale: accept-dns → true
+      - Tailscale service: StartType -> Automatic
+      - Tailscale: accept-dns -> true
 
     Manual steps (web UI only):
       - Tailscale admin console: remove the custom nameserver added at install time,
@@ -72,6 +72,8 @@ foreach ($task in @('AdGuardHome on Tailscale start', 'AdGuardHome off on Tailsc
 Step 'Removing AdGuard Home'
 $aghExe = 'C:\AdGuardHome\AdGuardHome.exe'
 if (Get-Service -Name AdGuardHome -ErrorAction SilentlyContinue) {
+    # Clear service dependency first so cascade-stop does not fight the uninstall
+    sc.exe config AdGuardHome depend= / | Out-Null
     Stop-Service -Name AdGuardHome -Force -ErrorAction SilentlyContinue
     if (Test-Path $aghExe) {
         & $aghExe -s uninstall 2>&1 | Out-Null
@@ -128,7 +130,7 @@ if (Test-Path $tsEnv) {
 # === Tailscale service to Automatic + accept-dns true ===
 Step 'Restoring Tailscale service config'
 sc.exe config Tailscale start= auto | Out-Null
-OK 'Tailscale → Automatic'
+OK 'Tailscale -> Automatic'
 
 $tsExe = 'C:\Program Files\Tailscale\tailscale.exe'
 if (Test-Path $tsExe) {
