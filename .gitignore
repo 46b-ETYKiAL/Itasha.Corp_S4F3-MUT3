@@ -1,3 +1,30 @@
-# Nothing local to ignore yet, but reserve the file
+# Local clutter
 *.tmp
 *.log
+*.bak
+*.swp
+*.orig
+
+# Windows shell metadata
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS shell metadata (if anyone clones from a Mac)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor / IDE droppings
+.vscode/
+.idea/
+*.code-workspace
+.history/
+
+# Local-only PowerShell transcripts and cache
+PSScriptAnalyzerSettings.user.psd1
+.s4f3-mut3-local/

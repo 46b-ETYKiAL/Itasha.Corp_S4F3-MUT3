@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate scripts and assets
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Parse under Windows PowerShell 5.1 specifically. The historical
+      # smart-quote tokenizer bug (em-dash / arrow inside quoted strings
+      # decoded as U+201D / U+2019 under Windows-1252) only manifests on
+      # PS 5.1 - PS 7 reads files as UTF-8 by default and tokenises them
+      # correctly. We want CI to catch that regression class, so this job
+      # runs the parse under the same engine end users have.
+      - name: PowerShell 5.1 parse (catches encoding regressions)
+        shell: powershell
+        run: |
+          $any = $false
+          $repoRoot = (Get-Location).Path
+          Get-ChildItem -Path . -Recurse -Filter '*.ps1' | ForEach-Object {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            $rel = $_.FullName.Substring($repoRoot.Length + 1)
+            if ($errors -and $errors.Count -gt 0) {
+              Write-Host "FAIL: $rel" -ForegroundColor Red
+              $errors | ForEach-Object { Write-Host "  L$($_.Extent.StartLineNumber):$($_.Extent.StartColumnNumber)  $($_.Message)" -ForegroundColor Red }
+              $any = $true
+            } else {
+              Write-Host "OK:   $rel"
+            }
+          }
+          if ($any) { exit 1 }
+
+      - name: PSScriptAnalyzer (PowerShell 7)
+        shell: pwsh
+        run: |
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+            Install-Module -Name PSScriptAnalyzer -Force -SkipPublisherCheck -Scope CurrentUser
+          }
+          Import-Module PSScriptAnalyzer
+          $settings = Join-Path $PWD '.github/PSScriptAnalyzerSettings.psd1'
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Settings $settings
+          if ($results) {
+            $results | Format-Table -AutoSize -Wrap RuleName, Severity, ScriptName, Line, Message
+            Write-Host ""
+            Write-Host "PSScriptAnalyzer: $($results.Count) finding(s)" -ForegroundColor Red
+            exit 1
+          }
+          Write-Host "PSScriptAnalyzer: 0 findings" -ForegroundColor Green
+
+      - name: SVG XML validation
+        shell: pwsh
+        run: |
+          $any = $false
+          Get-ChildItem -Path .github/assets -Filter '*.svg' -ErrorAction SilentlyContinue | ForEach-Object {
+            try {
+              [xml](Get-Content -LiteralPath $_.FullName -Raw) | Out-Null
+              Write-Host "OK:   $($_.Name)"
+            } catch {
+              Write-Host "FAIL: $($_.Name) - $($_.Exception.Message)" -ForegroundColor Red
+              $any = $true
+            }
+          }
+          if ($any) { exit 1 }
+
+      - name: Confirm canonical files present
+        shell: pwsh
+        run: |
+          $required = @(
+            'README.md', 'LICENSE', 'SECURITY.md', 'CHANGELOG.md', 'llms.txt', '.gitignore',
+            'setup.bat', 'start.bat', 'stop.bat', 'status.bat', 'uninstall.bat',
+            'scripts/setup.ps1', 'scripts/uninstall.ps1',
+            'scripts/start.ps1', 'scripts/stop.ps1', 'scripts/status.ps1',
+            '.github/assets/header.svg', '.github/assets/footer.svg',
+            '.github/assets/social-preview.svg', '.github/assets/social-preview.png'
+          )
+          $missing = $required | Where-Object { -not (Test-Path $_) }
+          if ($missing) {
+            Write-Host "Missing canonical files:" -ForegroundColor Red
+            $missing | ForEach-Object { Write-Host "  - $_" }
+            exit 1
+          }
+          Write-Host "All $($required.Count) canonical files present" -ForegroundColor Green

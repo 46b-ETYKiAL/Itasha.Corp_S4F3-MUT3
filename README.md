@@ -20,11 +20,12 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/46b-ETYKiAL/Itasha.Corp_S4F3-MUT3/actions/workflows/ci.yml"><img src="https://github.com/46b-ETYKiAL/Itasha.Corp_S4F3-MUT3/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/Windows_10%2F11-ff8c00?style=flat-square&logo=windows&logoColor=0a0a0f" alt="Windows 10/11" />
   <img src="https://img.shields.io/badge/PowerShell_5.1%2B-01fe36?style=flat-square&logo=powershell&logoColor=0a0a0f" alt="PowerShell 5.1+" />
   <img src="https://img.shields.io/badge/Tailscale-9a9aaa?style=flat-square&logo=tailscale&logoColor=0a0a0f" alt="Tailscale" />
   <img src="https://img.shields.io/badge/AdGuard_Home-00e5ff?style=flat-square&logo=adguard&logoColor=0a0a0f" alt="AdGuard Home" />
-  <img src="https://img.shields.io/badge/MIT-0a0a0f?style=flat-square&logoColor=ff8c00" alt="MIT licensed" />
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/46b-ETYKiAL/Itasha.Corp_S4F3-MUT3?style=flat-square&color=0a0a0f&labelColor=ff8c00" alt="MIT license" /></a>
 </p>
 
 ## About

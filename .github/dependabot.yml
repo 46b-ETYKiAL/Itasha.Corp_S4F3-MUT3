@@ -1,0 +1,22 @@
+version: 2
+
+updates:
+  # Track GitHub Actions versions referenced in .github/workflows/.
+  # No package manifests exist in this repo (PowerShell scripts only),
+  # so the only thing Dependabot can usefully watch is the GHA action
+  # versions in CI. When actions/checkout, etc. release a new major,
+  # Dependabot will open a PR.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
